@@ -25,11 +25,20 @@ void ftSetup() {
     handleError(FT_New_Face(library, "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 0, &face), "Error loading font face");
 }
 
+void bufferGlyph(int x, int y, int width, int height, unsigned char* buffer) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            unsigned char shade = buffer[i * width + j];
+            plot(x + j, y + i, shade | shade << 8 | shade << 16);
+        }
+    }
+}
+
 void drawText(int x, int y, int size, char* string) {
     handleError(FT_Set_Char_Size(face, 0, size*64, 300, 300), "Error setting character size");
     for (int i = 0; string[i] != 0; i++) {
         handleError(FT_Load_Char(face, string[i], FT_LOAD_RENDER), "Error loading/rendering glyph");
-        buffer(x + face->glyph->bitmap_left, y - face->glyph->bitmap_top, face->glyph->bitmap.width, face->glyph->bitmap.rows, 4, face->glyph->bitmap.buffer);
+        bufferGlyph(x + face->glyph->bitmap_left, y - face->glyph->bitmap_top, face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.buffer);
         x += face->glyph->advance.x >> 6;
     }
 }
@@ -38,7 +47,7 @@ void drawTextHidden(int x, int y, int size, char* string) {
     handleError(FT_Set_Char_Size(face, 0, size*64, 300, 300), "Error setting character size");
     for (int i = 0; string[i] != 0; i++) {
         handleError(FT_Load_Char(face, L'•', FT_LOAD_RENDER), "Error loading/rendering glyph");
-        buffer(x + face->glyph->bitmap_left, y - face->glyph->bitmap_top, face->glyph->bitmap.width, face->glyph->bitmap.rows, 4, face->glyph->bitmap.buffer);
+        bufferGlyph(x + face->glyph->bitmap_left, y - face->glyph->bitmap_top, face->glyph->bitmap.width, face->glyph->bitmap.rows, face->glyph->bitmap.buffer);
         x += face->glyph->advance.x >> 6;
     }
 }
@@ -132,7 +141,6 @@ int main() {
             }
         }
 
-        clear();
         drawText(240, 100, 12, "Log In");
         drawText(50, 200, 5, "Username:");
         rectangle(200, 175, 400, 30, 0xffffffff);
